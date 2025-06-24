@@ -7,7 +7,7 @@ GOARCH		?= $(shell go env GOARCH)
 BIN 		?= /usr/local/bin
 DIST_DIR	?= dist
 DIST_OS		?= darwin windows linux
-DIST_ARCH	?= arm64 # amd64 
+DIST_ARCH	?= arm64 amd64 
 
 VSCODE_ARTIFACT_URL="https://github.com/progrium/vscode-web/releases/download/v1/vscode-web-1.92.1-patched.zip"
 
@@ -34,7 +34,7 @@ build-vscode:
 assets/vscode-web.zip:
 	curl -qLo $@ $(VSCODE_ARTIFACT_URL)
 
-DIST_TARGETS	:= $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_DIR)/$(NAME)_$(VERSION)_$(os)_$(arch)))
+DIST_TARGETS	:= $(filter-out $(DIST_DIR)/$(NAME)_$(VERSION)_darwin_arm64, $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_DIR)/$(NAME)_$(VERSION)_$(os)_$(arch))))
 $(DIST_TARGETS): $(DIST_DIR)/%:
 	GOOS=$(word 3, $(subst _, ,$@)) \
 	GOARCH=$(word 4, $(subst _, ,$@)) \
