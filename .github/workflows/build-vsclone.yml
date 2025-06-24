@@ -1,0 +1,60 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    name: Build patched VSCode Web artifact
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+          check-latest: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Build vscode-web
+      - name: Build VSCode Web
+        uses: docker/build-push-action@v5
+        with:
+          context: external/vscode/patched
+          build-args: 
+          push: false
+          load: true
+          tags: vscode-web:latest
+          cache-from: type=local,src=/tmp/.buildx-cache/v86
+          cache-to: type=local,dest=/tmp/.buildx-cache-new/v86,mode=max
+          no-cache: ${{ github.event_name == 'push' && hashFiles('external/vscode/**') != hashFiles('external/v86/**', 'HEAD^') }}
+      - working-directory: ./external/vscode
+        run: |
+          rm -rf ./dist && mkdir -p ./dist/vscode
+          docker run --rm -v $(pwd)/dist/vscode:/dist vscode-web
+          zip -r ../../assets/vscode-web.zip ./dist
+
+
+      - name: Build project archive
+        run: make archive
+      
+      - name: Put VSCode Web asset in dist artifacts
+        run: cp -r ./assets/vscode-web.zip ./dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsclone-dist
+          path: dist/

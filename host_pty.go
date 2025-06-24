@@ -1,4 +1,4 @@
-package vscode
+package vsclone
 
 import (
 	"io"
@@ -7,7 +7,7 @@ import (
 	"tractor.dev/toolkit-go/duplex/rpc"
 )
 
-func (api *bridge) Terminal(r rpc.Responder, c *rpc.Call) {
+func (api *hostAPI) Terminal(r rpc.Responder, c *rpc.Call) {
 	c.Receive(nil)
 
 	f, err := api.wb.MakePTY()

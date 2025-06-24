@@ -1,4 +1,4 @@
-package vscode
+package vsclone
 
 import (
 	"strings"
@@ -22,8 +22,8 @@ func fixPath(path string) string {
 	return p
 }
 
-func (api *bridge) Stat(path string) (*entry, error) {
-	fi, err := fs.Stat(api.wb.FS, fixPath(path))
+func (api *hostAPI) Stat(path string) (*entry, error) {
+	fi, err := fs.Stat(api.wb.HostFS, fixPath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +36,12 @@ func (api *bridge) Stat(path string) (*entry, error) {
 	}, nil
 }
 
-func (api *bridge) ReadFile(path string) ([]byte, error) {
-	return fs.ReadFile(api.wb.FS, fixPath(path))
+func (api *hostAPI) ReadFile(path string) ([]byte, error) {
+	return fs.ReadFile(api.wb.HostFS, fixPath(path))
 }
 
-func (api *bridge) ReadDir(path string) ([]entry, error) {
-	dir, err := fs.ReadDir(api.wb.FS, fixPath(path))
+func (api *hostAPI) ReadDir(path string) ([]entry, error) {
+	dir, err := fs.ReadDir(api.wb.HostFS, fixPath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +59,10 @@ func (api *bridge) ReadDir(path string) ([]entry, error) {
 	return entries, nil
 }
 
-func (api *bridge) WriteFile(path string, data []byte) error {
-	return fs.WriteFile(api.wb.FS, fixPath(path), data, 0644)
+func (api *hostAPI) WriteFile(path string, data []byte) error {
+	return fs.WriteFile(api.wb.HostFS, fixPath(path), data, 0644)
 }
 
-func (api *bridge) MakeDir(path string) error {
-	return fs.MkdirAll(api.wb.FS, fixPath(path), 0744)
+func (api *hostAPI) MakeDir(path string) error {
+	return fs.MkdirAll(api.wb.HostFS, fixPath(path), 0744)
 }
