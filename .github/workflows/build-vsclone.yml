@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    name: Build patched VSCode Web artifact
+    name: Build VSClone based on patched VSCode Web artifact
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -30,17 +30,19 @@ jobs:
             ${{ runner.os }}-buildx-
 
       # Build vscode-web
+      - working-directory: ./external/vscode
+        run: |
+          mkdir -p /tmp/.buildx-cache/vscode /tmp/.buildx-cache-new/vscode
       - name: Build VSCode Web
         uses: docker/build-push-action@v5
         with:
           context: external/vscode/patched
-          build-args: 
           push: false
           load: true
           tags: vscode-web:latest
-          cache-from: type=local,src=/tmp/.buildx-cache/v86
-          cache-to: type=local,dest=/tmp/.buildx-cache-new/v86,mode=max
-          no-cache: ${{ github.event_name == 'push' && hashFiles('external/vscode/**') != hashFiles('external/v86/**', 'HEAD^') }}
+          cache-from: type=local,src=/tmp/.buildx-cache/vscode
+          cache-to: type=local,dest=/tmp/.buildx-cache-new/vscode,mode=max
+          no-cache: ${{ github.event_name == 'push' && hashFiles('external/vscode/**') != hashFiles('external/vscode/**', 'HEAD^') }}
       - working-directory: ./external/vscode
         run: |
           rm -rf ./dist && mkdir -p ./dist/vscode

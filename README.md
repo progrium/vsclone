@@ -1,41 +1,44 @@
-# go-vscode
+# VSClone
 
-VSCode as a Go library. Embed an editor in your Go programs.
+A "VSCode clone" starter project using Go.
 
-Set up `vscode.Workbench` with a terminal factory and filesystem (both of which can be virtual), then you can serve it as an HTTP handler to access your custom VSCode editor in the browser. Use with a webview window library to give the editor its own native window.
+VSClone is a re-creation of the VSCode desktop application, but using Go instead
+of Node.js/Electron. It's based on VSCode Web run in a webview window, so it is 
+still the VSCode UI, but wrapped in a custom Go host program. It uses a VSCode
+extension that bridges VSCode in the browser with native Go to provide access to
+the filesystem and shell.
 
-```go
-func main() {
-	cwd, _ := os.Getwd()
-	fsys := workingpathfs.New(osfs.New(), cwd)
+You can customize the editor by making a VSCode extension. VSClone can only run
+extensions that run in the browser at the moment (they cannot use Node.js).
 
-	wb := &vscode.Workbench{
-		ProductConfiguration: product.Configuration{
-			NameLong: "My Custom Editor",
-		},
-		MakePTY: func() (io.ReadWriteCloser, error) {
-			cmd := exec.Command("/bin/bash")
-			return pty.Start(cmd)
-		},
-		FS: fsys,
-	}
+Forking VSClone is a much simpler, hackable way to clone VSCode than forking the 
+VSCode project. 
 
-	log.Println("editor serving on :8080 ...")
-	if err := http.ListenAndServe(":8080", wb); err != nil {
-		log.Fatal(err)
-	}
+## Status
 
-}
+The current focus is on making VSClone a usable alternative to stock VSCode. 
+Please download and try using it, and file issues for anything that gets in the 
+way.
+
+## Install
+
+Download the latest release for your platform. Alternatively you can use
+Homebrew on Mac:
 
 ```
+brew tap progrium/homebrew-taps
+brew install vsclone
+```
 
-Let me know what else you'd like to customize from Go!
+## Using VSClone
 
-## Requires Git LFS
+VSClone currently ships as a CLI, so you have to start it from the shell. It
+will open the current directory if no directory argument is given.
 
-This Go module embeds a 17MB release artifact of [vscode-web](https://github.com/progrium/vscode-web) stored with Git LFS, which [doesn't quite work](https://github.com/golang/go/issues/47308) with `go get` seamlessly yet. 
+```
+vsclone [dir]
+```
 
-You must have [Git LFS](https://git-lfs.com/) installed and you must also set `export GOPRIVATE=github.com/progrium/go-vscode` as a workaround before running `go mod tidy` or `go get github.com/progrium/go-vscode`. Otherwise your built project will panic with `zip: not a valid zip file`.
 
 ## License
 
