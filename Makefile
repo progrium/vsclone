@@ -7,14 +7,14 @@ GOARCH		?= $(shell go env GOARCH)
 BIN 		?= /usr/local/bin
 DIST_DIR	?= dist
 DIST_OS		?= darwin windows linux
-DIST_ARCH	?= arm64 amd64 
+DIST_ARCH	?= arm64 amd64
 
 VSCODE_ARTIFACT_URL="https://github.com/progrium/vscode-web/releases/download/v1/vscode-web-1.92.1-patched.zip"
 
 ## Link binary to the bin directory
 link: build
-	rm -f $(BIN)/$(NAME)
-	ln -s $(PWD)/local/bin/$(NAME) $(BIN)/$(NAME)
+	rm $(BIN)/$(NAME) || true
+	ln -s "$(PWD)/local/bin/$(NAME)" $(BIN)/$(NAME)
 .PHONY: link
 
 ## Build binary

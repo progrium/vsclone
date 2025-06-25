@@ -51,6 +51,9 @@ jobs:
 
 
       - name: Build project archive
+        env:
+          DIST_OS: windows linux
+          DIST_ARCH: arm64 amd64
         run: make archive
       
       - name: Put VSCode Web asset in dist artifacts
