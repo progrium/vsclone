@@ -3,20 +3,14 @@ on:
     branches:
       - main
 jobs:
-  publish:
+  build-vscode:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    name: Build VSClone based on patched VSCode Web artifact
+    name: Build patched VSCode Web artifact
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-          check-latest: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -49,21 +43,157 @@ jobs:
         run: |
           rm -rf ./dist && mkdir -p ./dist/vscode
           docker run --rm -v $(pwd)/dist/vscode:/dist vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist
+          zip -r ../../dist/vscode-web.zip ./dist
 
-      - name: Build project archive
-        env:
-          DIST_OS: windows linux
-          DIST_ARCH: arm64 amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode-web
+          path: dist/
+
+  build-windows:
+    needs: build-vscode
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    name: Build VSClone for Windows
+    env:
+      DIST_OS: windows
+      DIST_ARCH: arm64 amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+          check-latest: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+
+      - run: |
+          cp ./dist/vscode-web.zip ./assets
+
+      - name: Build project for Windows
         run: make archive
       
-      - name: Put VSCode Web asset in dist artifacts
-        run: cp -r ./assets/vscode-web.zip ./dist
-
       - name: Clean non-zip files in dist/
         run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-dist
+          name: vsclone-windows
+          path: dist/
+
+  build-linux:
+    needs: build-vscode
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    name: Build VSClone for Linux
+    env:
+      DIST_OS: linux
+      DIST_ARCH: arm64 amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+          check-latest: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+
+      - run: |
+          cp ./dist/vscode-web.zip ./assets
+
+      - name: Build project for Linux
+        run: make archive
+      
+      - name: Clean non-zip files in dist/
+        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsclone-linux
+          path: dist/
+  
+  build-darwin-arm64:
+    needs: build-vscode
+    runs-on: macos-14
+    permissions:
+      contents: write
+    name: Build VSClone for Darwin ARM64
+    env:
+      DIST_OS: darwin
+      DIST_ARCH: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+          check-latest: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+
+      - run: |
+          cp ./dist/vscode-web.zip ./assets
+
+      - name: Build project for Linux
+        run: make archive
+      
+      - name: Clean non-zip files in dist/
+        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsclone-darwin-arm64
+          path: dist/
+
+  build-darwin-amd64:
+    needs: build-vscode
+    runs-on: macos-12
+    permissions:
+      contents: write
+    name: Build VSClone for Darwin AMD64
+    env:
+      DIST_OS: darwin
+      DIST_ARCH: amd64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+          check-latest: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+
+      - run: |
+          cp ./dist/vscode-web.zip ./assets
+
+      - name: Build project for Linux
+        run: make archive
+      
+      - name: Clean non-zip files in dist/
+        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsclone-darwin-arm64
           path: dist/

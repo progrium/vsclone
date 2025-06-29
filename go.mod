@@ -15,7 +15,7 @@ require (
 	github.com/jchv/go-webview2 v0.0.0-20221223143126-dc24628cff85 // indirect
 	github.com/jchv/go-winloader v0.0.0-20200815041850-dec1ee9a7fd5 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/progrium/darwinkit v0.5.0-preview.0.20240621212928-c9ae70adb484 // indirect
+	github.com/progrium/darwinkit v0.5.1-0.20240715194340-61b9e31a12fa // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 )
