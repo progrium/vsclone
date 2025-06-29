@@ -21,18 +21,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
+      # Build vscode-web with proper caching
+      - name: Cache Docker layers for VSCode Web
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-vscode-web-${{ hashFiles('external/vscode/**') }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-vscode-web-
 
-      # Build vscode-web
-      - working-directory: ./external/vscode
-        run: |
-          mkdir -p /tmp/.buildx-cache/vscode /tmp/.buildx-cache-new/vscode
       - name: Build VSCode Web
         uses: docker/build-push-action@v5
         with:
@@ -40,15 +37,19 @@ jobs:
           push: false
           load: true
           tags: vscode-web:latest
-          cache-from: type=local,src=/tmp/.buildx-cache/vscode
-          cache-to: type=local,dest=/tmp/.buildx-cache-new/vscode,mode=max
-          no-cache: ${{ github.event_name == 'push' && hashFiles('external/vscode/**') != hashFiles('external/vscode/**', 'HEAD^') }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
       - working-directory: ./external/vscode
         run: |
           rm -rf ./dist && mkdir -p ./dist/vscode
           docker run --rm -v $(pwd)/dist/vscode:/dist vscode-web
           zip -r ../../assets/vscode-web.zip ./dist
-
 
       - name: Build project archive
         env:
