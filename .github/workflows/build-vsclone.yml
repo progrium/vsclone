@@ -24,6 +24,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vscode-web-
 
+      - name: Prepare cache directory
+        run: |
+          mkdir -p /tmp/.buildx-cache
+          mkdir -p /tmp/.buildx-cache-new
+
       - name: Build VSCode Web
         uses: docker/build-push-action@v5
         with:
