@@ -62,7 +62,7 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wb.ensureHostExtension(r)
 	wb.ensureHostDir()
 
-	vscodeFS := workingpathfs.New(zipfs.New(vscodeReader), "dist")
+	vscodeFS := zipfs.New(vscodeReader)
 	hostextFS := workingpathfs.New(embedded, "hostext")
 
 	mux := http.NewServeMux()
