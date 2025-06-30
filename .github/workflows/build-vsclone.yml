@@ -150,11 +150,15 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-      - name: Install Colima and Docker CLI
+      - name: Install and start Docker
         run: |
-          brew install colima docker
-          colima start --memory 4 --disk 10
-          docker version
+          brew install --cask docker
+          sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended --install-privileged-components
+          open -a Docker
+          while ! docker system info > /dev/null 2>&1; do 
+            echo "Waiting for Docker..."
+            sleep 3
+          done
 
       - working-directory: ./external/vscode
         run: |
