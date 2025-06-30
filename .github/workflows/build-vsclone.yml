@@ -2,6 +2,12 @@ on:
   push:
     branches:
       - main
+env:
+  AC_API_KEY_ID: ${{ secrets.AC_API_KEY_ID }}
+  AC_ISSUER_ID: ${{ secrets.AC_ISSUER_ID }}
+  AC_PRIVATE_KEY: ${{ secrets.AC_PRIVATE_KEY }}
+  SIGNING_CERTIFICATE: ${{ secrets.SIGNING_CERTIFICATE }}
+  SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
 jobs:
   detect-vscode-changes:
     name: Detect VSCode changes
@@ -56,7 +62,8 @@ jobs:
     steps:
       - run: |
           rm -rf ./vscode-web
-          docker run --rm -v $(pwd)/vscode-web:/dist ghcr.io/${{ github.repository }}:vscode-web
+          mkdir -p ./vscode-web/vscode
+          docker run --rm -v $(pwd)/vscode-web/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
       
       - uses: actions/upload-artifact@v4
         with:
@@ -91,12 +98,20 @@ jobs:
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
-        run: make archive
-
+        run: make dist
+      
+      - run: mv dist/*_arm64 ./vsclone
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-windows
-          path: dist/
+          name: vsclone-windows-arm64
+          path: vsclone
+
+      - run: mv dist/*_amd64 ./vsclone
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsclone-windows-amd64
+          path: vsclone
+
 
   build-linux:
     name: Build for Linux (arm64, amd64)
@@ -126,12 +141,19 @@ jobs:
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
-        run: make archive
+        run: make dist
 
+      - run: mv dist/*_arm64 ./vsclone
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-linux
-          path: dist/
+          name: vsclone-linux-arm64
+          path: vsclone
+
+      - run: mv dist/*_amd64 ./vsclone
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsclone-linux-amd64
+          path: vsclone
   
   build-darwin-arm64:
     name: Build for Darwin (arm64)
@@ -147,6 +169,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Setup signing certificate and notarytool
+        run: |
+          echo "$SIGNING_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import cert.p12 -k build.keychain -P "$SIGNING_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          echo "$AC_PRIVATE_KEY" | base64 --decode > private_key.p8
+          xcrun notarytool store-credentials --key private_key.p8 \
+            --key-id "$AC_API_KEY_ID" --issuer "$AC_ISSUER_ID" ac-profile
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -161,12 +195,25 @@ jobs:
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
-        run: make archive
+        run: |
+          make dist
+          mv dist/*_arm64 ./vsclone
+
+      - name: Sign
+        run: |
+          codesign --timestamp --options runtime --sign "Developer ID Application" ./vsclone
+      
+      - name: Prepare for notarization
+        run: zip vsclone.zip vsclone
+      
+      - name: Notarize
+        run: |
+          xcrun notarytool submit vsclone.zip --keychain-profile ac-profile --wait
 
       - uses: actions/upload-artifact@v4
         with:
           name: vsclone-darwin-arm64
-          path: dist/
+          path: vsclone
 
   build-darwin-amd64:
     name: Build for Darwin (amd64)
@@ -182,6 +229,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Setup signing certificate and notarytool
+        run: |
+          echo "$SIGNING_CERTIFICATE" | base64 --decode > cert.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security import cert.p12 -k build.keychain -P "$SIGNING_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          echo "$AC_PRIVATE_KEY" | base64 --decode > private_key.p8
+          xcrun notarytool store-credentials --key private_key.p8 \
+            --key-id "$AC_API_KEY_ID" --issuer "$AC_ISSUER_ID" ac-profile
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -196,9 +255,22 @@ jobs:
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
-        run: make archive
+        run: |
+          make dist
+          mv dist/*_amd64 ./vsclone
+
+      - name: Sign
+        run: |
+          codesign --timestamp --options runtime --sign "Developer ID Application" ./vsclone
+      
+      - name: Prepare for notarization
+        run: zip vsclone.zip vsclone
+      
+      - name: Notarize
+        run: |
+          xcrun notarytool submit vsclone.zip --keychain-profile ac-profile --wait
 
       - uses: actions/upload-artifact@v4
         with:
           name: vsclone-darwin-amd64
-          path: dist/
+          path: vsclone
