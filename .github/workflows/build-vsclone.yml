@@ -200,5 +200,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-darwin-arm64
+          name: vsclone-darwin-amd64
           path: dist/

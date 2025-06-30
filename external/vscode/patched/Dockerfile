@@ -9,8 +9,7 @@ COPY ./extensionHostWorker.ts ./src/vs/workbench/api/worker/extensionHostWorker.
 COPY ./webWorkerExtensionHostIframe.html ./src/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html
 
 RUN yarn
-#RUN yarn gulp vscode-web-min
-RUN mkdir -p /vscode-web/node_modules && touch /vscode-web/empty.txt
+RUN yarn gulp vscode-web-min
 
 # Rename node_modules under output to modules.
 # Some CDNs and hosts strip node_modules.
