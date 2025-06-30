@@ -52,19 +52,14 @@ jobs:
     if: always() && needs.detect-vscode-changes.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      
-      - working-directory: ./external/vscode
-        run: |
-          rm -rf ./dist && mkdir -p ./dist/vscode
-          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist/*
+      - run: |
+          rm -rf ./vscode-web
+          docker run --rm -v $(pwd)/vscode-web:/dist ghcr.io/${{ github.repository }}:vscode-web
       
       - uses: actions/upload-artifact@v4
         with:
           name: vscode-web
-          path: assets/vscode-web.zip
+          path: vscode-web
 
   build-windows:
     needs: setup-vscode-web
@@ -89,13 +84,12 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: vscode-web
-          path: assets
+          path: tmp
+      - run: |
+          cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project for Windows
         run: make archive
-      
-      - name: Clean non-zip files in dist/
-        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
 
       - uses: actions/upload-artifact@v4
         with:
@@ -104,6 +98,7 @@ jobs:
 
   build-linux:
     needs: setup-vscode-web
+    if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -121,17 +116,15 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-      - working-directory: ./external/vscode
-        run: |
-          rm -rf ./dist && mkdir -p ./dist/vscode
-          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+          path: tmp
+      - run: |
+          cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project for Linux
         run: make archive
-      
-      - name: Clean non-zip files in dist/
-        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
 
       - uses: actions/upload-artifact@v4
         with:
@@ -158,13 +151,15 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+          path: tmp
+      - run: |
+          cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project for Linux
         run: make archive
-      
-      - name: Clean non-zip files in dist/
-        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
 
       - uses: actions/upload-artifact@v4
         with:
@@ -191,13 +186,15 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+          path: tmp
+      - run: |
+          cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project for Linux
         run: make archive
-      
-      - name: Clean non-zip files in dist/
-        run: find dist/ -type f ! -name '*.zip' -exec rm -f {} +
 
       - uses: actions/upload-artifact@v4
         with:

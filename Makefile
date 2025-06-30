@@ -50,7 +50,7 @@ archive: dist
 		if [ -f "$$file" ]; then \
 			zipfile="$${file}.zip"; \
 			tmpdir=$$(mktemp -d); \
-			cp "$$file" "$$tmpdir/$(NAME)"; \
+			mv "$$file" "$$tmpdir/$(NAME)"; \
 			(cd "$$tmpdir" && zip "$(PWD)/$$zipfile" $(NAME)); \
 			rm -rf "$$tmpdir"; \
 		fi \
