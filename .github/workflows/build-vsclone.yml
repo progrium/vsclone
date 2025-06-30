@@ -57,7 +57,8 @@ jobs:
           path: external/vscode/dist
 
   build-windows:
-    needs: build-vscode
+    needs: [detect-vscode-changes, build-vscode]
+    if: always() && needs.detect-vscode-changes.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -93,7 +94,8 @@ jobs:
           path: dist/
 
   build-linux:
-    needs: build-vscode
+    needs: [detect-vscode-changes, build-vscode]
+    if: always() && needs.detect-vscode-changes.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -129,7 +131,8 @@ jobs:
           path: dist/
   
   build-darwin-arm64:
-    needs: build-vscode
+    needs: [detect-vscode-changes, build-vscode]
+    if: always() && needs.detect-vscode-changes.result == 'success'
     runs-on: macos-14
     permissions:
       contents: write
@@ -168,8 +171,9 @@ jobs:
           path: dist/
 
   build-darwin-amd64:
-    needs: build-vscode
-    runs-on: macos-12
+    needs: [detect-vscode-changes, build-vscode]
+    if: always() && needs.detect-vscode-changes.result == 'success'
+    runs-on: macos-13
     permissions:
       contents: write
     name: Build VSClone for Darwin AMD64
