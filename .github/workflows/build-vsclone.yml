@@ -46,15 +46,6 @@ jobs:
           load: true
           tags: ghcr.io/${{ github.repository }}:vscode-web
 
-      - working-directory: ./external/vscode
-        run: |
-          rm -rf ./dist && mkdir -p ./dist/vscode
-          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: vscode-web
-          path: external/vscode/dist
 
   setup-vscode-web:
     needs: [detect-vscode-changes, build-vscode]
@@ -68,7 +59,7 @@ jobs:
         run: |
           rm -rf ./dist && mkdir -p ./dist/vscode
           docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist
+          zip -r ../../assets/vscode-web.zip ./dist/*
       
       - uses: actions/upload-artifact@v4
         with:
@@ -77,6 +68,7 @@ jobs:
 
   build-windows:
     needs: setup-vscode-web
+    if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -148,6 +140,7 @@ jobs:
   
   build-darwin-arm64:
     needs: setup-vscode-web
+    if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: macos-14
     permissions:
       contents: write
@@ -165,21 +158,7 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-      - name: Install and start Docker
-        run: |
-          brew install --cask docker
-          sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended --install-privileged-components
-          open -a Docker
-          while ! docker system info > /dev/null 2>&1; do 
-            echo "Waiting for Docker..."
-            sleep 3
-          done
 
-      - working-directory: ./external/vscode
-        run: |
-          rm -rf ./dist && mkdir -p ./dist/vscode
-          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist
 
       - name: Build project for Linux
         run: make archive
@@ -194,6 +173,7 @@ jobs:
 
   build-darwin-amd64:
     needs: setup-vscode-web
+    if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: macos-13
     permissions:
       contents: write
@@ -211,11 +191,7 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-      - working-directory: ./external/vscode
-        run: |
-          rm -rf ./dist && mkdir -p ./dist/vscode
-          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist
+
 
       - name: Build project for Linux
         run: make archive
