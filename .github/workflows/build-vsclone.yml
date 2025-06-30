@@ -147,6 +147,9 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - working-directory: ./external/vscode
         run: |
           rm -rf ./dist && mkdir -p ./dist/vscode
