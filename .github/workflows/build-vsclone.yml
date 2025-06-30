@@ -56,9 +56,27 @@ jobs:
           name: vscode-web
           path: external/vscode/dist
 
-  build-windows:
+  setup-vscode-web:
     needs: [detect-vscode-changes, build-vscode]
     if: always() && needs.detect-vscode-changes.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - working-directory: ./external/vscode
+        run: |
+          rm -rf ./dist && mkdir -p ./dist/vscode
+          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
+          zip -r ../../assets/vscode-web.zip ./dist
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vscode-web
+          path: assets/vscode-web.zip
+
+  build-windows:
+    needs: setup-vscode-web
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -76,11 +94,10 @@ jobs:
           go-version: '1.23'
           check-latest: true
 
-      - working-directory: ./external/vscode
-        run: |
-          rm -rf ./dist && mkdir -p ./dist/vscode
-          docker run --rm -v $(pwd)/dist/vscode:/dist ghcr.io/${{ github.repository }}:vscode-web
-          zip -r ../../assets/vscode-web.zip ./dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: vscode-web
+          path: assets
 
       - name: Build project for Windows
         run: make archive
@@ -94,8 +111,7 @@ jobs:
           path: dist/
 
   build-linux:
-    needs: [detect-vscode-changes, build-vscode]
-    if: always() && needs.detect-vscode-changes.result == 'success'
+    needs: setup-vscode-web
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -131,8 +147,7 @@ jobs:
           path: dist/
   
   build-darwin-arm64:
-    needs: [detect-vscode-changes, build-vscode]
-    if: always() && needs.detect-vscode-changes.result == 'success'
+    needs: setup-vscode-web
     runs-on: macos-14
     permissions:
       contents: write
@@ -178,8 +193,7 @@ jobs:
           path: dist/
 
   build-darwin-amd64:
-    needs: [detect-vscode-changes, build-vscode]
-    if: always() && needs.detect-vscode-changes.result == 'success'
+    needs: setup-vscode-web
     runs-on: macos-13
     permissions:
       contents: write
