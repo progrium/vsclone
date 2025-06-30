@@ -34,7 +34,7 @@ build-vscode:
 assets/vscode-web.zip:
 	curl -qLo $@ $(VSCODE_ARTIFACT_URL)
 
-DIST_TARGETS	:= $(filter-out $(DIST_DIR)/$(NAME)_$(VERSION)_darwin_arm64, $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_DIR)/$(NAME)_$(VERSION)_$(os)_$(arch))))
+DIST_TARGETS	:= $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_DIR)/$(NAME)_$(VERSION)_$(os)_$(arch)))
 $(DIST_TARGETS): $(DIST_DIR)/%:
 	GOOS=$(word 3, $(subst _, ,$@)) \
 	GOARCH=$(word 4, $(subst _, ,$@)) \

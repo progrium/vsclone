@@ -4,6 +4,7 @@ on:
       - main
 jobs:
   detect-vscode-changes:
+    name: Detect VSCode changes
     runs-on: ubuntu-latest
     outputs:
       vscode-changed: ${{ steps.changes.outputs.vscode }}
@@ -17,13 +18,13 @@ jobs:
               - 'external/vscode/**'
   
   build-vscode:
+    name: Build patched VSCode Web artifact
     needs: detect-vscode-changes
     if: needs.detect-vscode-changes.outputs.vscode-changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    name: Build patched VSCode Web artifact
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -48,6 +49,7 @@ jobs:
 
 
   setup-vscode-web:
+    name: Setup VSCode Web artifact
     needs: [detect-vscode-changes, build-vscode]
     if: always() && needs.detect-vscode-changes.result == 'success'
     runs-on: ubuntu-latest
@@ -62,12 +64,12 @@ jobs:
           path: vscode-web
 
   build-windows:
+    name: Build for Windows (arm64, amd64)
     needs: setup-vscode-web
     if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    name: Build VSClone for Windows
     env:
       DIST_OS: windows
       DIST_ARCH: arm64 amd64
@@ -88,7 +90,7 @@ jobs:
       - run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
-      - name: Build project for Windows
+      - name: Build project
         run: make archive
 
       - uses: actions/upload-artifact@v4
@@ -97,12 +99,12 @@ jobs:
           path: dist/
 
   build-linux:
+    name: Build for Linux (arm64, amd64)
     needs: setup-vscode-web
     if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    name: Build VSClone for Linux
     env:
       DIST_OS: linux
       DIST_ARCH: arm64 amd64
@@ -123,7 +125,7 @@ jobs:
       - run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
-      - name: Build project for Linux
+      - name: Build project
         run: make archive
 
       - uses: actions/upload-artifact@v4
@@ -132,12 +134,12 @@ jobs:
           path: dist/
   
   build-darwin-arm64:
+    name: Build for Darwin (arm64)
     needs: setup-vscode-web
     if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: macos-14
     permissions:
       contents: write
-    name: Build VSClone for Darwin ARM64
     env:
       DIST_OS: darwin
       DIST_ARCH: arm64
@@ -158,7 +160,7 @@ jobs:
       - run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
-      - name: Build project for Linux
+      - name: Build project
         run: make archive
 
       - uses: actions/upload-artifact@v4
@@ -167,12 +169,12 @@ jobs:
           path: dist/
 
   build-darwin-amd64:
+    name: Build for Darwin (amd64)
     needs: setup-vscode-web
     if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: macos-13
     permissions:
       contents: write
-    name: Build VSClone for Darwin AMD64
     env:
       DIST_OS: darwin
       DIST_ARCH: amd64
@@ -193,7 +195,7 @@ jobs:
       - run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
-      - name: Build project for Linux
+      - name: Build project
         run: make archive
 
       - uses: actions/upload-artifact@v4
