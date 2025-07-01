@@ -92,24 +92,33 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           check-latest: true
 
-      - uses: actions/download-artifact@v4
+      - name: Download VSCode Web artifact
+        uses: actions/download-artifact@v4
         with:
           name: vscode-web
           path: tmp
-      - run: |
+      
+      - name: Prepare VSCode Web asset
+        run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
         run: make dist
       
-      - run: mv dist/*_arm64 ./${{ env.BIN_NAME }}
-      - uses: actions/upload-artifact@v4
+      - name: Prepare arm64 artifact
+        run: mv dist/*_arm64 ./${BIN_NAME}
+      
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BIN_NAME }}-windows-arm64
           path: ${{ env.BIN_NAME }}
 
-      - run: mv dist/*_amd64 ./${{ env.BIN_NAME }}
-      - uses: actions/upload-artifact@v4
+      - name: Prepare amd64 artifact
+        run: mv dist/*_amd64 ./${BIN_NAME}
+      
+      - name: Upload amd64 artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BIN_NAME }}-windows-amd64
           path: ${{ env.BIN_NAME }}
@@ -148,14 +157,20 @@ jobs:
       - name: Build project
         run: make dist
 
-      - run: mv dist/*_arm64 ./${{ env.BIN_NAME }}
-      - uses: actions/upload-artifact@v4
+      - name: Prepare arm64 artifact
+        run: mv dist/*_arm64 ./${BIN_NAME}
+      
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BIN_NAME }}-linux-arm64
           path: ${{ env.BIN_NAME }}
 
-      - run: mv dist/*_amd64 ./${{ env.BIN_NAME }}
-      - uses: actions/upload-artifact@v4
+      - name: Prepare amd64 artifact
+        run: mv dist/*_amd64 ./${BIN_NAME}
+      
+      - name: Upload amd64 artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BIN_NAME }}-linux-amd64
           path: ${{ env.BIN_NAME }}
@@ -205,16 +220,16 @@ jobs:
       - name: Build project
         run: |
           make dist
-          mv dist/*_arm64 ./${{ env.BIN_NAME }}
+          mv dist/*_arm64 ./${BIN_NAME}
 
       - name: Sign
         run: |
-          codesign --timestamp --options runtime --sign "Developer ID Application" ./${{ env.BIN_NAME }}
+          codesign --timestamp --options runtime --sign "Developer ID Application" ./${BIN_NAME}
       
       - name: Notarize
         run: |
-          zip ${{ env.BIN_NAME }}.zip ${{ env.BIN_NAME }}
-          xcrun notarytool submit ${{ env.BIN_NAME }}.zip --keychain-profile ac-profile --wait
+          zip ${BIN_NAME}.zip ${BIN_NAME}
+          xcrun notarytool submit ${BIN_NAME}.zip --keychain-profile ac-profile --wait
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -267,16 +282,16 @@ jobs:
       - name: Build project
         run: |
           make dist
-          mv dist/*_amd64 ./${{ env.BIN_NAME }}
+          mv dist/*_amd64 ./${BIN_NAME}
 
       - name: Sign
         run: |
-          codesign --timestamp --options runtime --sign "Developer ID Application" ./${{ env.BIN_NAME }}
+          codesign --timestamp --options runtime --sign "Developer ID Application" ./${BIN_NAME}
       
       - name: Notarize
         run: |
-          zip ${{ env.BIN_NAME }}.zip ${{ env.BIN_NAME }}
-          xcrun notarytool submit ${{ env.BIN_NAME }}.zip --keychain-profile ac-profile --wait
+          zip ${BIN_NAME}.zip ${BIN_NAME}
+          xcrun notarytool submit ${BIN_NAME}.zip --keychain-profile ac-profile --wait
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
