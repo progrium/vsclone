@@ -1,8 +1,11 @@
+name: Build VSClone
 on:
   push:
     branches:
       - main
 env:
+  BIN_NAME: vsclone
+  GO_VERSION: '1.23.1'
   AC_API_KEY_ID: ${{ secrets.AC_API_KEY_ID }}
   AC_ISSUER_ID: ${{ secrets.AC_ISSUER_ID }}
   AC_PRIVATE_KEY: ${{ secrets.AC_PRIVATE_KEY }}
@@ -24,7 +27,7 @@ jobs:
               - 'external/vscode/**'
   
   build-vscode:
-    name: Build patched VSCode Web artifact
+    name: Build patched VSCode Web
     needs: detect-vscode-changes
     if: needs.detect-vscode-changes.outputs.vscode-changed == 'true'
     runs-on: ubuntu-latest
@@ -50,12 +53,11 @@ jobs:
         with:
           context: external/vscode/patched
           push: true
-          load: true
           tags: ghcr.io/${{ github.repository }}:vscode-web
 
 
   setup-vscode-web:
-    name: Setup VSCode Web artifact
+    name: Prepare VSCode artifact
     needs: [detect-vscode-changes, build-vscode]
     if: always() && needs.detect-vscode-changes.result == 'success'
     runs-on: ubuntu-latest
@@ -71,7 +73,7 @@ jobs:
           path: vscode-web
 
   build-windows:
-    name: Build for Windows (arm64, amd64)
+    name: Build for Windows
     needs: setup-vscode-web
     if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: ubuntu-latest
@@ -87,7 +89,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
 
       - uses: actions/download-artifact@v4
@@ -100,21 +102,21 @@ jobs:
       - name: Build project
         run: make dist
       
-      - run: mv dist/*_arm64 ./vsclone
+      - run: mv dist/*_arm64 ./${{ env.BIN_NAME }}
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-windows-arm64
-          path: vsclone
+          name: ${{ env.BIN_NAME }}-windows-arm64
+          path: ${{ env.BIN_NAME }}
 
-      - run: mv dist/*_amd64 ./vsclone
+      - run: mv dist/*_amd64 ./${{ env.BIN_NAME }}
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-windows-amd64
-          path: vsclone
+          name: ${{ env.BIN_NAME }}-windows-amd64
+          path: ${{ env.BIN_NAME }}
 
 
   build-linux:
-    name: Build for Linux (arm64, amd64)
+    name: Build for Linux
     needs: setup-vscode-web
     if: always() && needs.setup-vscode-web.result == 'success'
     runs-on: ubuntu-latest
@@ -130,30 +132,33 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
 
-      - uses: actions/download-artifact@v4
+      - name: Download VSCode Web artifact
+        uses: actions/download-artifact@v4
         with:
           name: vscode-web
           path: tmp
-      - run: |
+      
+      - name: Prepare VSCode Web asset
+        run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
         run: make dist
 
-      - run: mv dist/*_arm64 ./vsclone
+      - run: mv dist/*_arm64 ./${{ env.BIN_NAME }}
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-linux-arm64
-          path: vsclone
+          name: ${{ env.BIN_NAME }}-linux-arm64
+          path: ${{ env.BIN_NAME }}
 
-      - run: mv dist/*_amd64 ./vsclone
+      - run: mv dist/*_amd64 ./${{ env.BIN_NAME }}
       - uses: actions/upload-artifact@v4
         with:
-          name: vsclone-linux-amd64
-          path: vsclone
+          name: ${{ env.BIN_NAME }}-linux-amd64
+          path: ${{ env.BIN_NAME }}
   
   build-darwin-arm64:
     name: Build for Darwin (arm64)
@@ -184,36 +189,38 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
 
-      - uses: actions/download-artifact@v4
+      - name: Download VSCode Web artifact
+        uses: actions/download-artifact@v4
         with:
           name: vscode-web
           path: tmp
-      - run: |
+      
+      - name: Prepare VSCode Web asset
+        run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
         run: |
           make dist
-          mv dist/*_arm64 ./vsclone
+          mv dist/*_arm64 ./${{ env.BIN_NAME }}
 
       - name: Sign
         run: |
-          codesign --timestamp --options runtime --sign "Developer ID Application" ./vsclone
-      
-      - name: Prepare for notarization
-        run: zip vsclone.zip vsclone
+          codesign --timestamp --options runtime --sign "Developer ID Application" ./${{ env.BIN_NAME }}
       
       - name: Notarize
         run: |
-          xcrun notarytool submit vsclone.zip --keychain-profile ac-profile --wait
+          zip ${{ env.BIN_NAME }}.zip ${{ env.BIN_NAME }}
+          xcrun notarytool submit ${{ env.BIN_NAME }}.zip --keychain-profile ac-profile --wait
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: vsclone-darwin-arm64
-          path: vsclone
+          name: ${{ env.BIN_NAME }}-darwin-arm64
+          path: ${{ env.BIN_NAME }}
 
   build-darwin-amd64:
     name: Build for Darwin (amd64)
@@ -244,33 +251,35 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
 
-      - uses: actions/download-artifact@v4
+      - name: Download VSCode Web artifact
+        uses: actions/download-artifact@v4
         with:
           name: vscode-web
           path: tmp
-      - run: |
+      
+      - name: Prepare VSCode Web asset
+        run: |
           cd tmp && zip -r ../assets/vscode-web.zip .
 
       - name: Build project
         run: |
           make dist
-          mv dist/*_amd64 ./vsclone
+          mv dist/*_amd64 ./${{ env.BIN_NAME }}
 
       - name: Sign
         run: |
-          codesign --timestamp --options runtime --sign "Developer ID Application" ./vsclone
-      
-      - name: Prepare for notarization
-        run: zip vsclone.zip vsclone
+          codesign --timestamp --options runtime --sign "Developer ID Application" ./${{ env.BIN_NAME }}
       
       - name: Notarize
         run: |
-          xcrun notarytool submit vsclone.zip --keychain-profile ac-profile --wait
+          zip ${{ env.BIN_NAME }}.zip ${{ env.BIN_NAME }}
+          xcrun notarytool submit ${{ env.BIN_NAME }}.zip --keychain-profile ac-profile --wait
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: vsclone-darwin-amd64
-          path: vsclone
+          name: ${{ env.BIN_NAME }}-darwin-amd64
+          path: ${{ env.BIN_NAME }}
