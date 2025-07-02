@@ -5,9 +5,9 @@ VERSION=1.92.1
 all: asset
 
 dist: 
-	rm -rf ./dist && mkdir -p ./dist/vscode	
-	docker build --load -t vscode-web ./patched --build-arg VERSION=$(VERSION)
-	docker run --rm -v ./dist/vscode:/dist vscode-web
+	rm -rf ./dist && mkdir -p ./dist/vscode
+	docker build --load -t vscode-web . --build-arg VERSION=$(VERSION)
+	docker run --rm -v $(pwd)/dist/vscode:/dist vscode-web
 
 asset: dist
 	zip -r ../../assets/vscode-web.zip ./dist
