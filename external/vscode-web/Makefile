@@ -1,16 +1,6 @@
-.PHONY: all vscode asset dist
-
 VERSION=1.92.1
 
-all: asset
-
-dist: 
-	rm -rf ./dist && mkdir -p ./dist/vscode
+asset: 
 	docker build --load -t vscode-web . --build-arg VERSION=$(VERSION)
-	docker run --rm -v $(pwd)/dist/vscode:/dist vscode-web
-
-asset: dist
-	zip -r ../../assets/vscode-web.zip ./dist
-
-vscode:
-	git clone --depth 1 https://github.com/microsoft/vscode.git -b $(VERSION)
+	docker run --rm -v $(PWD)/../../assets:/out vscode-web
+.PHONY: asset

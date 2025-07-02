@@ -1,6 +1,6 @@
 FROM node:20-alpine AS builder
 ARG VERSION=1.92.1
-RUN apk add -u krb5-dev libx11-dev libxkbfile-dev libsecret-dev git build-base python3
+RUN apk add -u krb5-dev libx11-dev libxkbfile-dev libsecret-dev git build-base python3 zip
 RUN git clone --depth 1 https://github.com/microsoft/vscode.git -b ${VERSION}
 WORKDIR /vscode
 
@@ -15,8 +15,13 @@ RUN yarn gulp vscode-web-min
 # Some CDNs and hosts strip node_modules.
 RUN mv /vscode-web/node_modules /vscode-web/modules
 
+# Prepare and zip for export
+RUN mkdir -p /out
+RUN mv /vscode-web /out/vscode
+RUN cd /out && zip -r /vscode-web.zip ./vscode
+
+# Export the built artifacts
+# For use with `docker run -v ./out:/out ...`
 FROM alpine:latest AS exporter
-# Copy only the built artifacts
-COPY --from=builder /vscode-web /vscode-web/
-# For use with `docker run -v ./dist:/dist ...`
-CMD cp -r /vscode-web/* /dist
+COPY --from=builder /vscode-web.zip /vscode-web.zip
+CMD cp /vscode-web.zip /out
