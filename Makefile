@@ -27,7 +27,7 @@ build: assets/vscode-web.zip
 
 ## Build VSCode Web asset
 build-vscode:
-	make -C external/vscode
+	make -C external/vscode-web
 .PHONY: build-vscode
 
 
@@ -43,19 +43,6 @@ $(DIST_TARGETS): $(DIST_DIR)/%:
 ## Build distribution binaries
 dist: $(DIST_TARGETS)
 .PHONY: dist
-
-## Create zip archives for distribution
-archive: dist
-	@for file in $(DIST_DIR)/*; do \
-		if [ -f "$$file" ]; then \
-			zipfile="$${file}.zip"; \
-			tmpdir=$$(mktemp -d); \
-			mv "$$file" "$$tmpdir/$(NAME)"; \
-			(cd "$$tmpdir" && zip "$(PWD)/$$zipfile" $(NAME)); \
-			rm -rf "$$tmpdir"; \
-		fi \
-	done
-.PHONY: archive
 
 .DEFAULT_GOAL := show-help
 
