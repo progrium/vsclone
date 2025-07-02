@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-//go:embed hostext assets
+//go:embed extension assets
 var embedded embed.FS
 
 var vscodeReader *zip.Reader

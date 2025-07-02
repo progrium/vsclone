@@ -63,11 +63,11 @@ func (wb *Workbench) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wb.ensureHostDir()
 
 	vscodeFS := zipfs.New(vscodeReader)
-	hostextFS := workingpathfs.New(embedded, "hostext")
+	extensionFS := workingpathfs.New(embedded, "extension")
 
 	mux := http.NewServeMux()
 	mux.Handle("/host/api", websocket.Handler(wb.handleAPI))
-	mux.Handle("/host/ext/", http.StripPrefix("/host/ext", http.FileServerFS(hostextFS)))
+	mux.Handle("/host/ext/", http.StripPrefix("/host/ext", http.FileServerFS(extensionFS)))
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			http.ServeFileFS(w, r, embedded, "assets/index.html")
