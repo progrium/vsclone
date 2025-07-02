@@ -8,6 +8,9 @@ jobs:
   vscode-web:
     name: VSCode Web
     uses: progrium/github-workflows/.github/workflows/vscode-web.yml@main
+    permissions:
+      contents: read
+      packages: write
     with:
       artifact-name: vscode-web
       path: external/vscode-web
