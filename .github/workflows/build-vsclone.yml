@@ -6,7 +6,7 @@ on:
 
 jobs:
   vscode-web:
-    name: VSCode Web
+    name: VSCode
     uses: progrium/github-workflows/.github/workflows/vscode-web.yml@main
     permissions:
       contents: read
