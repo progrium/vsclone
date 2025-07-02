@@ -3,14 +3,7 @@ on:
   push:
     branches:
       - main
-env:
-  BIN_NAME: vsclone
-  GO_VERSION: '1.23.1'
-  AC_API_KEY_ID: ${{ secrets.AC_API_KEY_ID }}
-  AC_ISSUER_ID: ${{ secrets.AC_ISSUER_ID }}
-  AC_PRIVATE_KEY: ${{ secrets.AC_PRIVATE_KEY }}
-  SIGNING_CERTIFICATE: ${{ secrets.SIGNING_CERTIFICATE }}
-  SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+
 jobs:
   detect-vscode-changes:
     name: Detect VSCode changes
@@ -79,7 +72,7 @@ jobs:
     uses: progrium/github-workflows/.github/workflows/golang-cli-build.yml@main
     with:
       bin-name: vsclone
-      go-version: ${{ env.GO_VERSION }}
+      go-version: '1.23.1'
       needs-artifact: vscode-web
       pre-build-script: |
         cd _artifact && zip -r ../assets/vscode-web.zip .
