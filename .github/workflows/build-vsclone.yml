@@ -24,5 +24,5 @@ jobs:
       go-version: '1.23.1'
       needs-artifact: vscode-web
       pre-build-script: |
-        cd _artifact && zip -r ../assets/vscode-web.zip .
+        cd _artifact && ls -la && zip -r ../assets/vscode-web.zip .
     secrets: inherit
