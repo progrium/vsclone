@@ -39,7 +39,7 @@ DIST_TARGETS	:= $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_D
 $(DIST_TARGETS): $(DIST_DIR)/%:
 	GOOS=$(word 3, $(subst _, ,$@)) \
 	GOARCH=$(word 4, $(subst _, ,$@)) \
-	go build -ldflags="-X main.Version=$(VERSION)" $(GOARGS) -o $@ ./cmd/$(NAME)	
+	go build -ldflags="-X main.Version=$(VERSION) -X main.CodeVersion=$(CODE_VERSION)" $(GOARGS) -o $@ ./cmd/$(NAME)	
 
 ## Build distribution binaries
 dist: $(DIST_TARGETS)
