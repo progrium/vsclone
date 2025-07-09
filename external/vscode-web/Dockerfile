@@ -1,5 +1,5 @@
 FROM node:20-alpine AS builder
-ARG VERSION=main
+ARG VERSION=non-existent
 RUN apk add -u krb5-dev libx11-dev libxkbfile-dev libsecret-dev git build-base python3 zip
 RUN git clone --depth 1 https://github.com/microsoft/vscode.git -b ${VERSION}
 WORKDIR /vscode
