@@ -12,7 +12,6 @@ jobs:
       contents: read
       packages: write
     with:
-      version: $(cat external/vscode-web/version.txt)
       artifact-name: vscode-web
       path: external/vscode-web
 

@@ -1,6 +1,5 @@
-VERSION=$(shell cat version.txt)
 
 asset: 
-	docker build --load -t vscode-web . --build-arg VERSION=$(VERSION)
+	docker build --load -t vscode-web .
 	docker run --rm -v $(PWD)/../../assets:/out vscode-web
 .PHONY: asset
