@@ -10,8 +10,6 @@ DIST_DIR		?= dist
 DIST_OS			?= darwin windows linux
 DIST_ARCH		?= arm64 amd64
 
-VSCODE_ARTIFACT_URL="https://github.com/progrium/vscode-web/releases/download/v1/vscode-web-1.92.1-patched.zip"
-
 ## Link binary to the bin directory
 link: build
 	rm $(BIN)/$(NAME) || true
@@ -32,8 +30,7 @@ build-vscode:
 .PHONY: build-vscode
 
 
-assets/vscode-web.zip:
-	curl -qLo $@ $(VSCODE_ARTIFACT_URL)
+assets/vscode-web.zip: build-vscode
 
 DIST_TARGETS	:= $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_DIR)/$(NAME)_$(VERSION)_$(os)_$(arch)))
 $(DIST_TARGETS): $(DIST_DIR)/%:
