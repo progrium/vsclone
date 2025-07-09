@@ -21,13 +21,14 @@ import (
 )
 
 var (
-	Version string
-	Product = product.Configuration{
+	Version     string
+	CodeVersion string
+	Product     = product.Configuration{
 		NameShort:       "VSClone",
 		NameLong:        "My VSCode Clone",
 		ApplicationName: "vsclone",
 		DataFolderName:  ".vsclone",
-		Version:         "1.92.1-0.2",
+		Version:         fmt.Sprintf("%s-%s", CodeVersion, Version),
 	}
 )
 

@@ -4,7 +4,7 @@
 		<meta http-equiv="Content-Security-Policy" content="
 			default-src 'none';
 			child-src 'self' data: blob:;
-			script-src 'self' 'unsafe-eval' 'sha256-9j450HMbEfN1G81Y1/sVbY5TQK0Nrby85xPcnwSo5AU=' https: http://localhost:* blob:;
+			script-src 'self' 'unsafe-eval' 'sha256-b1gl7QpqTeJsHRxo6/s3ADqNs0RxqFJdxLZjtwmCs68=' https: http://localhost:* blob:;
 			connect-src 'self' https: wss: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*;"/>
 	</head>
 	<body>
@@ -17,7 +17,41 @@
 	const salt = searchParams.get('salt');
 
 	(async function () {
-		return start();
+		const hostnameValidationMarker = 'v--';
+		const hostname = location.hostname;
+		if (!hostname.startsWith(hostnameValidationMarker)) {
+			// validation not requested
+			return start();
+		}
+		if (!crypto.subtle) {
+			// cannot validate, not running in a secure context
+			return sendError(new Error(`Cannot validate in current context!`));
+		}
+
+		// Here the `parentOriginHash()` function from `src/vs/base/browser/iframe.ts` is inlined
+		// compute a sha-256 composed of `parentOrigin` and `salt` converted to base 32
+		/** @type {string} */
+		let parentOriginHash;
+		try {
+			const strData = JSON.stringify({ parentOrigin, salt });
+			const encoder = new TextEncoder();
+			const arrData = encoder.encode(strData);
+			const hash = await crypto.subtle.digest('sha-256', arrData);
+			const hashArray = Array.from(new Uint8Array(hash));
+			const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+			// sha256 has 256 bits, so we need at most ceil(lg(2^256-1)/lg(32)) = 52 chars to represent it in base 32
+			parentOriginHash = BigInt(`0x${hashHex}`).toString(32).padStart(52, '0');
+		} catch (err) {
+			return sendError(err instanceof Error ? err : new Error(String(err)));
+		}
+
+		const requiredSubdomain = `${hostnameValidationMarker}${parentOriginHash}.`;
+		if (hostname.substring(0, requiredSubdomain.length) === requiredSubdomain) {
+			// validation succeeded!
+			return start();
+		}
+
+		return sendError(new Error(`Expected '${requiredSubdomain}' as subdomain!`));
 	})();
 
 	function sendError(error) {
@@ -44,7 +78,7 @@
 				return;
 			}
 			const { data } = event.data;
-			createWorker(data.baseUrl, data.workerUrl, data.nls.messages, data.nls.language);
+			createWorker(data.baseUrl, data.workerUrl, data.fileRoot, data.nls.messages, data.nls.language);
 		};
 
 		window.parent.postMessage({
@@ -53,24 +87,35 @@
 		}, '*');
 	}
 
-	function createWorker(baseUrl, workerUrl, nlsMessages, nlsLanguage) {
+	function createWorker(baseUrl, workerUrl, fileRoot, nlsMessages, nlsLanguage) {
 		try {
 			if (globalThis.crossOriginIsolated) {
 				workerUrl += '?vscode-coi=2'; // COEP
 			}
 
+			// ESM-comment-begin
+			const isESM = false;
+			// ESM-comment-end
+			// ESM-uncomment-begin
+			// const isESM = true;
+			// ESM-uncomment-end
+
 			const blob = new Blob([[
 				`/*extensionHostWorker*/`,
 				`globalThis.MonacoEnvironment = { baseUrl: '${baseUrl}' };`,
-				// VSCODE_GLOBALS: NLS
 				`globalThis._VSCODE_NLS_MESSAGES = ${JSON.stringify(nlsMessages)};`,
 				`globalThis._VSCODE_NLS_LANGUAGE = ${JSON.stringify(nlsLanguage)};`,
-				`importScripts('${workerUrl}');`,
+				`globalThis._VSCODE_FILE_ROOT = '${fileRoot}';`,
+				isESM ? `await import('${workerUrl}');` : `importScripts('${workerUrl}');`,
+				isESM ? `globalThis.onmessage({ data: 'vs/workbench/api/worker/extensionHostWorker' });` : undefined, // important to start loading after the ESM async import has finished
 				`/*extensionHostWorker*/`
 			].join('')], { type: 'application/javascript' });
 
-			const worker = new Worker(URL.createObjectURL(blob), { name });
-			worker.postMessage('vs/workbench/api/worker/extensionHostWorker');
+			const worker = new Worker(URL.createObjectURL(blob), { name, type: isESM ? 'module' : undefined });
+			if (!isESM) {
+				// Note: cannot postMessage into a worker that is ESM because imports are async
+				worker.postMessage('vs/workbench/api/worker/extensionHostWorker');
+			}
 			const nestedWorkers = new Map();
 
 			worker.onmessage = (event) => {

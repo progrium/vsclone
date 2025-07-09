@@ -1,13 +1,14 @@
 
-NAME		?= vsclone
-VERSION 	?= v0.2-$(shell git rev-parse --short HEAD)
-GOARGS		?=
-GOOS		?= $(shell go env GOOS)
-GOARCH		?= $(shell go env GOARCH)
-BIN 		?= /usr/local/bin
-DIST_DIR	?= dist
-DIST_OS		?= darwin windows linux
-DIST_ARCH	?= arm64 amd64
+NAME			?= vsclone
+VERSION 		?= v0.2-$(shell git rev-parse --short HEAD)
+CODE_VERSION	?= $(shell cat external/vscode-web/version.txt)
+GOARGS			?=
+GOOS			?= $(shell go env GOOS)
+GOARCH			?= $(shell go env GOARCH)
+BIN 			?= /usr/local/bin
+DIST_DIR		?= dist
+DIST_OS			?= darwin windows linux
+DIST_ARCH		?= arm64 amd64
 
 VSCODE_ARTIFACT_URL="https://github.com/progrium/vscode-web/releases/download/v1/vscode-web-1.92.1-patched.zip"
 
@@ -19,7 +20,7 @@ link: build
 
 ## Build binary
 build: assets/vscode-web.zip
-	go build -ldflags="-X main.Version=$(VERSION)" \
+	go build -ldflags="-X main.Version=$(VERSION) -X main.CodeVersion=$(CODE_VERSION)" \
 		$(GOARGS) \
 		-o ./local/bin/$(NAME) \
 		./cmd/$(NAME)

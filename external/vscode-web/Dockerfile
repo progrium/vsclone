@@ -1,5 +1,5 @@
 FROM node:20-alpine AS builder
-ARG VERSION=1.92.1
+ARG VERSION=main
 RUN apk add -u krb5-dev libx11-dev libxkbfile-dev libsecret-dev git build-base python3 zip
 RUN git clone --depth 1 https://github.com/microsoft/vscode.git -b ${VERSION}
 WORKDIR /vscode
@@ -10,6 +10,10 @@ COPY ./webWorkerExtensionHostIframe.html ./src/vs/workbench/services/extensions/
 
 RUN yarn
 RUN yarn gulp vscode-web-min
+
+# later versions of vscode use npm instead of yarn
+#RUN npm install
+#RUN npm run gulp vscode-web-min
 
 # Rename node_modules under output to modules.
 # Some CDNs and hosts strip node_modules.

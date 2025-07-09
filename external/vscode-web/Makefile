@@ -1,4 +1,4 @@
-VERSION=1.92.1
+VERSION=$(shell cat version.txt)
 
 asset: 
 	docker build --load -t vscode-web . --build-arg VERSION=$(VERSION)
