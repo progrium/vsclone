@@ -10,17 +10,17 @@ DIST_DIR		?= dist
 DIST_OS			?= darwin windows linux
 DIST_ARCH		?= arm64 amd64
 
-## Link binary to the bin directory
+## Link/install the local binary
 link: build
-	rm $(BIN)/$(NAME) || true
-	ln -s "$(PWD)/local/bin/$(NAME)" $(BIN)/$(NAME)
+	[ -f "$(BIN)/$(NAME)" ] && rm "$(BIN)/$(NAME)" || true
+	ln -s "$(shell pwd)/.local/bin/$(NAME)" "$(BIN)/$(NAME)"
 .PHONY: link
 
 ## Build binary
 build: assets/vscode-web.zip
 	go build -ldflags="-X main.Version=$(VERSION) -X main.CodeVersion=$(CODE_VERSION)" \
 		$(GOARGS) \
-		-o ./local/bin/$(NAME) \
+		-o .local/bin/$(NAME) \
 		./cmd/$(NAME)
 .PHONY: build
 
@@ -29,8 +29,8 @@ build-vscode:
 	make -C external/vscode-web
 .PHONY: build-vscode
 
-
-assets/vscode-web.zip: build-vscode
+assets/vscode-web.zip: 
+	make build-vscode
 
 DIST_TARGETS	:= $(foreach os, $(DIST_OS), $(foreach arch, $(DIST_ARCH), $(DIST_DIR)/$(NAME)_$(VERSION)_$(os)_$(arch)))
 $(DIST_TARGETS): $(DIST_DIR)/%:
