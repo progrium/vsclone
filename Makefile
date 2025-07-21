@@ -6,14 +6,14 @@ GOARGS			?=
 GOOS			?= $(shell go env GOOS)
 GOARCH			?= $(shell go env GOARCH)
 BIN 			?= /usr/local/bin
-DIST_DIR		?= dist
+DIST_DIR		?= .local/dist
 DIST_OS			?= darwin windows linux
 DIST_ARCH		?= arm64 amd64
 
 ## Link/install the local binary
 link: build
 	[ -f "$(BIN)/$(NAME)" ] && rm "$(BIN)/$(NAME)" || true
-	ln -s "$(shell pwd)/.local/bin/$(NAME)" "$(BIN)/$(NAME)"
+	ln -fs "$(shell pwd)/.local/bin/$(NAME)" "$(BIN)/$(NAME)"
 .PHONY: link
 
 ## Build binary
